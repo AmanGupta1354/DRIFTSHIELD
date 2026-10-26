@@ -52,7 +52,7 @@ export default function Audit() {
           <span className={cn('grid h-11 w-11 place-items-center rounded-xl border', broken.size ? 'border-danger/40 bg-danger/10 text-danger' : 'border-ok/35 bg-ok/10 text-ok')}>{broken.size ? <TriangleAlert size={20} /> : <ShieldCheck size={20} />}</span>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold">{broken.size ? `Chain broken — ${broken.size} record${broken.size > 1 ? 's' : ''} no longer match their recorded hash` : `Hash chain consistent across ${stored.length} records`}</div>
-            <p className="text-xs text-muted">Each record commits to the previous one. <b>Simulated demo:</b> hashes use a fast non-cryptographic function and the log lives in your browser, so this is not a tamper-proof audit store.</p>
+            <p className="text-xs text-muted">Each record commits to the previous one. Simulated hashes — not a tamper-proof store.</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {tamper ? <Button variant="ok" onClick={() => setTamper(null)}>Restore record</Button> : <Button variant="danger" onClick={() => setTamper(ordered[Math.floor(ordered.length / 2)]?.event_id ?? null)}>Simulate tampering</Button>}

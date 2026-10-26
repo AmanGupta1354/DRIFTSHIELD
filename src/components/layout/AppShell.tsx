@@ -14,19 +14,11 @@ import { Topbar } from './Topbar';
 
 export function AppShell() {
   const { pathname } = useLocation();
-  const theme = useStore((s) => s.prefs.theme);
   const anim = useStore((s) => s.prefs.animations);
   const banner = useStore((s) => s.prefs.display.showSimBanner);
   const compactTables = useStore((s) => s.prefs.display.compactTables);
   const collapsed = useUi((s) => s.sidebarCollapsed);
   const focusSearch = useUi((s) => s.focusSearch);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.setAttribute('data-motion', anim);
-    const meta = document.querySelector('meta[name="theme-color"]');
-    meta?.setAttribute('content', theme === 'dark' ? '#07080c' : '#eef1f7');
-  }, [theme, anim]);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -45,9 +37,9 @@ export function AppShell() {
         <div className="mx-auto max-w-[1600px] px-4 pb-10 sm:px-6 lg:px-8">
           <Topbar />
           {banner && (
-            <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-warn/25 bg-warn/[0.06] px-4 py-2 text-xs text-warn">
+            <div className="mb-4 flex items-center gap-3 rounded-lg border border-warn/20 bg-warn/[0.05] px-3 py-1.5 text-[11.5px] text-warn/90">
               <SimBadge />
-              <span className="text-warn/90">Frontend-only prototype. All agents, events and risk scores are simulated; nothing is enforced outside this browser tab.</span>
+              <span>All agents, events and scores are simulated.</span>
             </div>
           )}
           <main id="main" tabIndex={-1} className={cn('outline-none', compactTables && 'compact')}>

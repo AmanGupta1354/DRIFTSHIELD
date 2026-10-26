@@ -10,7 +10,7 @@ interface BtnProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const V: Record<Variant, string> = {
-  primary: 'bg-gradient-to-r from-brand to-brand/70 text-white shadow-[0_0_24px_-6px_rgb(var(--brand)/0.7)] hover:brightness-110',
+  primary: 'bg-brand text-white hover:brightness-110',
   neon: 'border border-neon/40 bg-neon/10 text-neon hover:bg-neon/20',
   ghost: 'text-muted hover:bg-fg/5 hover:text-fg',
   danger: 'border border-danger/40 bg-danger/10 text-danger hover:bg-danger/20',
@@ -120,7 +120,7 @@ export function Tip({ text, children }: { text: string; children: ReactNode }) {
   return (
     <span className="group/tip relative inline-flex">
       {children}
-      <span role="tooltip" className="pointer-events-none absolute -top-1 left-1/2 z-50 w-max max-w-[240px] -translate-x-1/2 -translate-y-full rounded-md border border-line/15 bg-bg2 px-2 py-1 text-[11px] font-normal normal-case tracking-normal text-fg opacity-0 shadow-xl transition-opacity group-hover/tip:opacity-100 group-focus-within/tip:opacity-100">
+      <span role="tooltip" className="pointer-events-none absolute -top-1 left-1/2 z-50 hidden w-max max-w-[min(240px,70vw)] -translate-x-1/2 -translate-y-full rounded-md border border-line/15 bg-bg2 px-2 py-1 text-[11px] font-normal normal-case tracking-normal text-fg shadow-xl group-hover/tip:block group-focus-within/tip:block">
         {text}
       </span>
     </span>

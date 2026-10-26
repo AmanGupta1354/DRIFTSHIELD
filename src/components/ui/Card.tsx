@@ -6,7 +6,7 @@ interface CardProps {
   title?: ReactNode;
   icon?: LucideIcon;
   /** terminal-style section id, e.g. RISK_OVERVIEW */
-  code?: string;
+  code?: string; // kept for call-site compatibility; no longer rendered
   right?: ReactNode;
   className?: string;
   bodyClassName?: string;
@@ -15,7 +15,7 @@ interface CardProps {
   children?: ReactNode;
 }
 
-export function Card({ title, icon: Icon, code, right, className, bodyClassName, glow, brackets, children }: CardProps) {
+export function Card({ title, icon: Icon, right, className, bodyClassName, glow, brackets, children }: CardProps) {
   return (
     <section
       className={cn(
@@ -33,8 +33,7 @@ export function Card({ title, icon: Icon, code, right, className, bodyClassName,
           <div className="flex min-w-0 items-center gap-2.5">
             {Icon && <Icon size={15} className="shrink-0 text-neon" aria-hidden />}
             <div className="min-w-0">
-              {code && <div className="label !text-[9.5px] leading-none text-neon/70">{`// ${code}`}</div>}
-              <h2 className="truncate text-[13px] font-semibold tracking-wide text-fg">{title}</h2>
+                            <h2 className="truncate text-[13px] font-semibold tracking-wide text-fg">{title}</h2>
             </div>
           </div>
           {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}

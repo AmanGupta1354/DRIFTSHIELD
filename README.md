@@ -33,12 +33,30 @@ Every tool call passes through one gateway that decides inline and explains the 
 
 Every investigation view shows the three-column PASS / WARN / FAIL summary and a final decision.
 
+## Routes
+
+| Route | Purpose |
+|---|---|
+| `/` | Public landing page with an interactive, deterministic attack demo |
+| `/login` | Demo sign-in (frontend-only, **not** real authentication) |
+| `/dashboard` | Security overview with the XAI panel; sub-pages under `/dashboard/*` |
+
+**Hackathon demo access:** `analyst@driftshield.demo` / `DriftShield@2026`. These credentials are public by design. The "session" is a flag in
+`sessionStorage`; there is no authentication backend, and no password or secret is stored.
+
+## Explainable AI (XAI)
+
+`src/lib/xai.ts` turns the structured detector evidence of any event into: what happened, which signals fired, a per-family risk breakdown,
+why it was allowed / held / blocked, recommended next steps, and a Detected / Recommended / Enforced summary. It uses deterministic templates —
+**no LLM and no external service**. The `Explainer` interface lets a generative explainer be swapped in later without changing the UI.
+The XAI panel appears on the dashboard, in event and alert drawers, and in the attack simulator, where it narrates each stage live.
+
 ## Features
 
-- **Overview** – KPIs, fleet risk gauge, activity chart (15 m / 1 h / 24 h), threat distribution, live event feed, high-risk agents.
+- **Dashboard** – KPIs, recent events, agent risk, risk distribution, open alerts and the XAI panel; Start / Pause / Reset demo controls.
 - **Live Monitor** – animated 7-stage gateway pipeline fed by a controlled nine-call playlist (start / pause / reset, speed, auto-play toggle).
 - **Attack Simulator** – five deterministic, replayable scenarios with step timeline, live risk gauge, terminal log, evidence and causal chain:
-  A Poisoned Supplier Document · B Restricted Data Exfiltration · C Suspicious Agent Identity (stolen token) · D Gradual Behavioural Deviation · E Cross-Agent Identity Drift (multi-agent delegation abuse).
+  A Poisoned Supplier Document (single agent) · B Restricted Data Exfiltration · C Suspicious Agent Identity (stolen token) · D Gradual Behavioural Deviation · E Poisoned Document → Research → Orchestrator → HR export (the primary multi-agent demo).
 - **Agent Fleet** – 12 agents, cards + sortable table, filters, agent profile drawer, simulated Activate / Pause / Quarantine / Isolate / Restore with confirmation.
 - **Security Alerts** – search, filters, sort, pagination, drawer with *detected / recommended / enforced* shown separately, acknowledge / close / reopen.
 - **Event Timeline** – timeline and table views, filters, structured event JSON with copy-to-clipboard.

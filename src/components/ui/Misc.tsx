@@ -102,3 +102,14 @@ export function Pagination({ page, pages, onPage, total }: { page: number; pages
     </div>
   );
 }
+
+export function Collapse({ title, children, defaultOpen }: { title: ReactNode; children: ReactNode; defaultOpen?: boolean }) {
+  return (
+    <details open={defaultOpen} className="group mt-4 rounded-lg border border-line/10 bg-bg/40 open:bg-bg/50">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted hover:text-fg [&::-webkit-details-marker]:hidden">
+        {title}<span className="text-neon transition-transform group-open:rotate-90" aria-hidden>›</span>
+      </summary>
+      <div className="px-3 pb-3 pt-1">{children}</div>
+    </details>
+  );
+}

@@ -128,7 +128,7 @@ export default function RoleContracts() {
     <div className="space-y-4">
       <div className="flex items-start gap-3 rounded-xl border border-warn/30 bg-warn/[0.07] px-4 py-3 text-xs text-warn">
         <FileLock2 size={16} className="mt-0.5 shrink-0" />
-        <p><b>Simulated policy registry.</b> Contract edits, approvals and activations only change this browser’s local state — nothing is written to a real policy registry. Activated contracts are used by the simulation engine immediately: try allowing <span className="font-mono">hr_db.query</span> for Procurement, activate it, and replay Scenario A.</p>
+        <p><b>Simulated registry.</b> Changes stay in this browser. Activated contracts apply to the next scenario run immediately.</p>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
@@ -155,7 +155,7 @@ export default function RoleContracts() {
               <div><div className="label mb-1.5">approved egress destinations</div>{body.approvedEgress.length ? <div className="flex flex-wrap gap-1.5">{body.approvedEgress.map((t) => <Badge key={t} tone="holo">{t}</Badge>)}</div> : <p className="text-xs text-muted">None — any outbound call is a hard violation.</p>}</div>
               <div><div className="label mb-1.5">approval requirements</div>{body.approvalRequirements.length ? <ul className="list-disc space-y-1 pl-5 text-xs">{body.approvalRequirements.map((r) => <li key={r}>{r}</li>)}</ul> : <p className="text-xs text-muted">None.</p>}</div>
               <div><div className="label mb-1.5">forbidden action sequences</div>{body.forbiddenSequences.length ? <ul className="space-y-1.5">{body.forbiddenSequences.map((s) => <li key={seqKey(s)} className="rounded-lg border border-danger/25 bg-danger/5 px-3 py-2 text-xs"><span className="font-mono text-danger">{s.first} → {s.then}</span><span className="ml-2 text-muted">{s.reason}</span></li>)}</ul> : <p className="text-xs text-muted">None.</p>}</div>
-              <p className="rounded-lg border border-line/10 bg-bg/40 px-3 py-2 text-xs text-muted">Policy note: a hard role-contract violation (tool, ceiling, egress or forbidden sequence) blocks the operation <b>independently of the score threshold</b>; its score is floored at 90.</p>
+              <p className="rounded-lg border border-line/10 bg-bg/40 px-3 py-2 text-xs text-muted">A hard violation (tool, ceiling, egress, sequence) blocks <b>regardless of the score</b>.</p>
             </div>
           )}
 

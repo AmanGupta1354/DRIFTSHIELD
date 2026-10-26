@@ -11,14 +11,14 @@
   --line: 255 255 255;
   --fg: 232 236 245;
   --muted: 142 151 172;
-  --brand: 255 59 92;
-  --neon: 56 225 255;
-  --holo: 167 139 250;
-  --ok: 52 224 160;
-  --warn: 255 190 60;
-  --danger: 255 77 98;
+  --brand: 232 56 82;
+  --neon: 98 190 222;
+  --holo: 150 140 205;
+  --ok: 58 196 140;
+  --warn: 236 176 62;
+  --danger: 238 82 96;
   --glass-a: 0.55;
-  --grid-a: 0.045;
+  --grid-a: 0.028;
   --shadow: 0 10px 40px -12px rgb(0 0 0 / 0.7);
   color-scheme: dark;
 }
@@ -66,9 +66,8 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(900px 500px at 8% -10%, rgb(var(--brand) / 0.12), transparent 60%),
-    radial-gradient(800px 500px at 100% 0%, rgb(var(--neon) / 0.09), transparent 60%),
-    radial-gradient(700px 600px at 50% 120%, rgb(var(--holo) / 0.08), transparent 60%);
+    radial-gradient(900px 500px at 8% -10%, rgb(var(--brand) / 0.07), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgb(var(--neon) / 0.035), transparent 60%);
 }
 body::after {
   content: '';
@@ -123,8 +122,8 @@ body::after {
     backdrop-filter: blur(18px) saturate(140%);
     -webkit-backdrop-filter: blur(18px) saturate(140%);
     border: 1px solid rgb(var(--line) / 0.09);
-    border-radius: 1rem;
-    box-shadow: var(--shadow), inset 0 1px 0 rgb(var(--line) / 0.06);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow), inset 0 1px 0 rgb(var(--line) / 0.04);
   }
 
   /* holographic gradient hairline */
@@ -139,17 +138,17 @@ body::after {
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
-    opacity: 0.55;
+    opacity: 0.22;
     pointer-events: none;
     transition: opacity 0.3s;
   }
   .holo-edge:hover::before {
-    opacity: 1;
-    animation: shimmer 6s linear infinite;
+    opacity: 0.5;
   }
 
   /* corner brackets (tactical HUD) */
   .brackets::after {
+    display: none;
     content: '';
     position: absolute;
     inset: 6px;
@@ -187,23 +186,20 @@ body::after {
     @apply font-mono text-[10.5px] uppercase tracking-[0.16em] text-muted;
   }
   .glow-brand {
-    box-shadow: 0 0 0 1px rgb(var(--brand) / 0.4), 0 0 22px -4px rgb(var(--brand) / 0.55);
+    box-shadow: 0 0 0 1px rgb(var(--brand) / 0.35), 0 0 14px -6px rgb(var(--brand) / 0.4);
   }
   .glow-neon {
-    box-shadow: 0 0 0 1px rgb(var(--neon) / 0.35), 0 0 22px -6px rgb(var(--neon) / 0.55);
+    box-shadow: 0 0 0 1px rgb(var(--neon) / 0.3), 0 0 12px -6px rgb(var(--neon) / 0.35);
   }
   .glow-danger {
-    box-shadow: 0 0 0 1px rgb(var(--danger) / 0.45), 0 0 28px -4px rgb(var(--danger) / 0.6);
+    box-shadow: 0 0 0 1px rgb(var(--danger) / 0.4), 0 0 16px -6px rgb(var(--danger) / 0.45);
   }
   .glow-ok {
-    box-shadow: 0 0 0 1px rgb(var(--ok) / 0.35), 0 0 20px -6px rgb(var(--ok) / 0.5);
+    box-shadow: 0 0 0 1px rgb(var(--ok) / 0.3), 0 0 10px -6px rgb(var(--ok) / 0.35);
   }
 
   .holo-text {
-    background: linear-gradient(100deg, rgb(var(--neon)), rgb(var(--holo)) 45%, rgb(var(--brand)));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: rgb(var(--brand));
   }
 
   .input {

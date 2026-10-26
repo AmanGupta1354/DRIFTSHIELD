@@ -1,10 +1,11 @@
-import { Bell, Moon, RotateCcw, Search, Sun } from 'lucide-react';
+import { Bell, LogOut, Moon, RotateCcw, Search, Sun } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AGENT_NAME } from '../../data/agents';
 import { RESOURCES } from '../../data/resources';
 import { stopAndClearAll } from '../../lib/simRunner';
 import { ago, cn } from '../../lib/utils';
+import { useAuth } from '../../lib/auth';
 import { useStore } from '../../store/useStore';
 import { useUi } from '../../store/useUi';
 import { SeverityBadge, SimBadge } from '../ui/Badges';
@@ -36,10 +37,10 @@ function GlobalSearch() {
     const out: Hit[] = [];
     const done = () => { setOpen(false); setQ(''); };
     NAV.filter((n) => n.label.toLowerCase().includes(s)).forEach((n) => out.push({ kind: 'page', label: n.label, sub: n.to, go: () => { nav(n.to); done(); } }));
-    agents.filter((a) => (a.name + a.id + a.role).toLowerCase().includes(s)).slice(0, 4).forEach((a) => out.push({ kind: 'agent', label: a.name, sub: a.id, go: () => { nav(`/fleet?agent=${a.id}`); done(); } }));
-    alerts.filter((a) => (a.title + a.id + a.category).toLowerCase().includes(s)).slice(0, 4).forEach((a) => out.push({ kind: 'alert', label: a.title, sub: a.id, go: () => { nav(`/alerts?alert=${a.id}`); done(); } }));
-    events.filter((e) => (e.event_id + e.tool + e.resource + e.action).toLowerCase().includes(s)).slice(0, 4).forEach((e) => out.push({ kind: 'event', label: `${e.tool} → ${e.resource}`, sub: e.event_id, go: () => { nav(`/timeline?event=${e.event_id}`); done(); } }));
-    RESOURCES.filter((r) => (r.name + r.id).toLowerCase().includes(s)).slice(0, 3).forEach((r) => out.push({ kind: 'resource', label: r.name, sub: r.id, go: () => { nav(`/resources?res=${r.id}`); done(); } }));
+    agents.filter((a) => (a.name + a.id + a.role).toLowerCase().includes(s)).slice(0, 4).forEach((a) => out.push({ kind: 'agent', label: a.name, sub: a.id, go: () => { nav(`/dashboard/fleet?agent=${a.id}`); done(); } }));
+    alerts.filter((a) => (a.title + a.id + a.category).toLowerCase().includes(s)).slice(0, 4).forEach((a) => out.push({ kind: 'alert', label: a.title, sub: a.id, go: () => { nav(`/dashboard/alerts?alert=${a.id}`); done(); } }));
+    events.filter((e) => (e.event_id + e.tool + e.resource + e.action).toLowerCase().includes(s)).slice(0, 4).forEach((e) => out.push({ kind: 'event', label: `${e.tool} → ${e.resource}`, sub: e.event_id, go: () => { nav(`/dashboard/timeline?event=${e.event_id}`); done(); } }));
+    RESOURCES.filter((r) => (r.name + r.id).toLowerCase().includes(s)).slice(0, 3).forEach((r) => out.push({ kind: 'resource', label: r.name, sub: r.id, go: () => { nav(`/dashboard/resources?res=${r.id}`); done(); } }));
     return out.slice(0, 12);
   }, [q, agents, alerts, events, nav]);
 
@@ -91,7 +92,7 @@ function Notifications() {
             <ul className="max-h-80 overflow-y-auto">
               {items.map((n) => (
                 <li key={n.id}>
-                  <Link to={n.alertId ? `/alerts?alert=${n.alertId}` : '/alerts'} onClick={() => setOpen(false)} className={cn('block rounded-lg px-3 py-2 hover:bg-neon/10', !n.read && 'bg-brand/5')}>
+                  <Link to={n.alertId ? `/dashboard/alerts?alert=${n.alertId}` : '/dashboard/alerts'} onClick={() => setOpen(false)} className={cn('block rounded-lg px-3 py-2 hover:bg-neon/10', !n.read && 'bg-brand/5')}>
                     <div className="flex items-center justify-between gap-2"><SeverityBadge severity={n.severity} /><span className="font-mono text-[10.5px] text-muted">{ago(n.ts)}</span></div>
                     <p className="mt-1 text-xs">{n.title}</p>
                   </Link>
@@ -107,6 +108,7 @@ function Notifications() {
 
 export function Topbar() {
   const { pathname } = useLocation();
+  const nav = useNavigate();
   const theme = useStore((s) => s.prefs.theme);
   const setTheme = useStore((s) => s.setThemeMode);
   const resetData = useStore((s) => s.resetData);
@@ -114,6 +116,7 @@ export function Topbar() {
   const mobile = useUi((s) => s.mobileNav);
   const push = useUi((s) => s.push);
   const [confirm, setConfirm] = useState(false);
+  const signOut = useAuth((s) => s.signOut);
 
   return (
     <>
@@ -127,7 +130,6 @@ export function Topbar() {
             </span>
           </button>
           <div className="min-w-0">
-            <div className="label !text-[9.5px] text-neon/70">// {pathname === '/' ? 'overview' : pathname.slice(1)}</div>
             <h1 className="truncate text-lg font-semibold leading-tight">{titleFor(pathname)}</h1>
           </div>
           <div className="ml-auto hidden flex-1 justify-center px-4 md:flex"><GlobalSearch /></div>
@@ -138,8 +140,9 @@ export function Topbar() {
             <IconButton icon={RotateCcw} label="Reset demo" onClick={() => setConfirm(true)} />
             <div className="hidden items-center gap-2 border-l border-line/10 pl-3 xl:flex">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-neon to-brand text-[11px] font-bold text-black">SA</span>
-              <div className="leading-tight"><div className="text-xs font-medium">Security Analyst</div><div className="font-mono text-[10px] text-muted">analyst@sim.local</div></div>
+              <div className="leading-tight"><div className="text-xs font-medium">Security Analyst</div><div className="font-mono text-[10px] text-muted">demo session</div></div>
             </div>
+            <IconButton icon={LogOut} label="Sign out" onClick={() => { signOut(); nav('/login'); }} />
           </div>
         </div>
         <div className="mt-3 md:hidden"><GlobalSearch /></div>

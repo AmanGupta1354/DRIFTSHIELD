@@ -4,18 +4,21 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CausalChain } from '../components/common/CausalChain';
 import { RiskGauge } from '../components/common/RiskGauge';
-import { SignalList, TriadPanel } from '../components/common/Triad';
+import { TriadPanel } from '../components/common/Triad';
+import { XaiPanel } from '../components/common/XaiPanel';
 import { Pipeline, PipelineTrack, stageStates } from '../components/simulator/Pipeline';
 import { Terminal } from '../components/simulator/Terminal';
 import { DriftChart } from '../components/simulator/DriftChart';
 import { ActionBadge, Badge, SimBadge } from '../components/ui/Badges';
 import { Button, Toggle } from '../components/ui/Controls';
 import { Card } from '../components/ui/Card';
+import { Collapse } from '../components/ui/Misc';
 import { SCENARIO_LIST, SCENARIOS, type DriftMetric, type ScenarioId } from '../data/scenarios';
 import { useOpen } from '../hooks/useOpen';
 import { categoryLabel, compileScenario } from '../lib/simulationEngine';
 import { nextStep, pauseRun, replayRun, resetRun, resumeRun, startScenario } from '../lib/simRunner';
 import { isBlocking } from '../lib/riskScoring';
+import { narrateStep, STAGE_TITLE } from '../lib/xai';
 import { TONE, cn } from '../lib/utils';
 import { useSim } from '../store/useSim';
 import { useStore } from '../store/useStore';
@@ -27,7 +30,7 @@ export default function AttackSimulator() {
   const autoPlay = useStore((s) => s.prefs.autoPlay);
   const setPrefs = useStore((s) => s.setPrefs);
   const { openEvent, openAlert } = useOpen();
-  const [picked, setPicked] = useState<ScenarioId>('A');
+  const [picked, setPicked] = useState<ScenarioId>('E');
   const listRef = useRef<HTMLOListElement>(null);
   const running = sim.status === 'running' || sim.status === 'paused' || sim.status === 'awaiting';
   const id = (sim.scenarioId && sim.scenarioId !== 'M' ? sim.scenarioId : picked) as Exclude<ScenarioId, 'M'>;
@@ -65,6 +68,8 @@ export default function AttackSimulator() {
     sim.stage, sim.decided, cs?.revealed ?? [], cs?.liveScore ?? 0, cs?.liveAction ?? 'allow', !!cs?.focus,
   );
   const decisionAction = cs?.liveAction ?? 'allow';
+  const finalNow = !!cs && sim.decided && !!cs.spec.focus && !!cs.spec.emit?.includes(cs.spec.focus);
+  const finalAlert = useStore((s) => s.alerts.find((a) => a.run_key === id));
   const blockedNow = !!cs && sim.decided && isBlocking(decisionAction) && !!cs.spec.emit?.length;
 
   const metrics = compiled.steps.slice(0, Math.max(0, sim.stepIndex + 1)).map((s) => s.spec.metrics).filter(Boolean) as DriftMetric[];
@@ -74,9 +79,9 @@ export default function AttackSimulator() {
       {/* USP strip */}
       <div className="grid gap-3 md:grid-cols-3">
         {[
-          { l: 'ROLE', q: 'Is this action permitted for the declared role?', i: ShieldCheck, c: 'neon' },
-          { l: 'REASON', q: 'Is it justified by the task and what the agent just read?', i: Brain, c: 'holo' },
-          { l: 'ROUTINE', q: 'Is it consistent with this agent\'s normal behaviour?', i: Activity, c: 'brand' },
+          { l: 'ROLE', q: 'Allowed for this role?', i: ShieldCheck, c: 'neon' },
+          { l: 'REASON', q: 'Why is it acting now?', i: Brain, c: 'holo' },
+          { l: 'ROUTINE', q: 'Normal for this agent?', i: Activity, c: 'brand' },
         ].map((x) => (
           <div key={x.l} className="glass flex items-center gap-3 px-4 py-3">
             <span className={cn('grid h-9 w-9 place-items-center rounded-lg border', TONE[x.c as 'neon'].border, TONE[x.c as 'neon'].bg, TONE[x.c as 'neon'].text)}><x.i size={17} /></span>
@@ -129,7 +134,7 @@ export default function AttackSimulator() {
               <Button icon={Siren} disabled={!done || !finalAlertId} onClick={() => finalAlertId && openAlert(finalAlertId)}>Open investigation</Button>
             </div>
             <Toggle checked={autoPlay} onChange={(v) => setPrefs({ autoPlay: v })} label="Auto-play" description="Off: advance each step yourself with “Next step”." />
-            <p className="text-[11px] leading-relaxed text-muted">Every scenario is deterministic and repeatable. All activity is simulated and contacts no real system.</p>
+            <p className="text-[11px] text-muted">Deterministic and repeatable. Nothing leaves your browser.</p>
           </Card>
         </div>
 
@@ -137,16 +142,24 @@ export default function AttackSimulator() {
         <div className="min-w-0 space-y-4">
           <Card title={`Scenario ${spec.id} — ${spec.title}`} code={spec.category.toUpperCase()} icon={Swords} right={<Badge tone="holo">{categoryLabel(spec.category)}</Badge>}>
             <p className="text-[13px] text-muted">{spec.description}</p>
-            <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
-              {spec.initialState.map((s) => (
-                <li key={s} className="flex items-start gap-2 text-xs text-muted"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-neon" />{s}</li>
-              ))}
-            </ul>
+            <Collapse title="Initial conditions">
+              <ul className="grid gap-1.5 sm:grid-cols-2">
+                {spec.initialState.map((s) => (
+                  <li key={s} className="flex items-start gap-2 text-xs text-muted"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-neon" />{s}</li>
+                ))}
+              </ul>
+            </Collapse>
           </Card>
 
           <Card title="Gateway pipeline" code="DRIFTSHIELD_PIPELINE" icon={ShieldCheck} brackets right={sim.status !== 'idle' && sim.scenarioId === id ? <Badge tone={sim.status === 'done' ? 'neon' : sim.status === 'paused' ? 'warn' : 'ok'} dot>{sim.status}</Badge> : <Badge tone="muted">ready</Badge>}>
             <Pipeline states={states} outcomeLabel={blockedNow || (done && isBlocking(decisionAction)) ? 'Blocked' : 'Allowed'} />
             <div className="mt-3"><PipelineTrack progress={sim.stage < 0 ? 0 : (sim.stage + (sim.decided ? 1 : 0.4)) / 7} blocked={blockedNow} /></div>
+            {cs && (
+              <motion.div key={sim.stepIndex} initial={{ opacity: 0.4, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-lg border border-neon/25 bg-neon/[0.06] px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2"><Badge tone="neon">XAI · {STAGE_TITLE[cs.spec.stage]}</Badge><span className="text-[13px] font-semibold">{cs.spec.title}</span></div>
+                <p className="mt-1.5 text-[13px] leading-relaxed">{narrateStep(cs, sim.decided)}</p>
+              </motion.div>
+            )}
             {(blockedNow || (done && isBlocking(finalEvent?.decision.action ?? 'allow'))) && (
               <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="mt-4 rounded-xl border border-danger/50 bg-danger/10 px-4 py-3 text-center font-mono text-[13px] font-semibold tracking-wider text-danger glow-danger">
                 {spec.headline}
@@ -182,7 +195,7 @@ export default function AttackSimulator() {
                   <div className="w-[190px] shrink-0"><RiskGauge score={cs?.liveScore ?? 0} size={190} /></div>
                   <div className="min-w-0 space-y-2 text-center sm:text-left">
                     <div className="flex flex-wrap justify-center gap-2 sm:justify-start">{cs && cs.liveScore > 0 ? <ActionBadge action={cs.liveAction} /> : <Badge>awaiting evidence</Badge>}{cs?.hard && <Badge tone="danger">hard violation</Badge>}</div>
-                    <p className="text-[11px] leading-relaxed text-muted">Illustrative demo value computed from configured mock signals — not a measured model output.</p>
+                    <p className="text-[11px] text-muted">Illustrative score from configured mock signals.</p>
                   </div>
                 </div>
               </Card>
@@ -190,13 +203,13 @@ export default function AttackSimulator() {
             </div>
           </div>
 
-          <Card title="Role · Reason · Routine evidence" code="EVIDENCE" icon={Brain}>
-            {cs?.focus ? (
-              <div className="space-y-4">
-                <TriadPanel triad={cs.triad} action={sim.decided && cs.spec.emit?.includes(cs.spec.focus ?? '') ? cs.liveAction : undefined} compact />
-                <SignalList grid signals={cs.revealed} empty="Evidence appears as each detector reports." />
-              </div>
-            ) : <p className="py-6 text-center text-xs text-muted">Start the scenario to see evidence for each detector.</p>}
+          <Card title="Role · Reason · Routine" icon={Brain} bodyClassName="space-y-4">
+            {cs ? (
+              <>
+                <TriadPanel triad={cs.triad} action={finalNow ? cs.liveAction : undefined} compact />
+                {cs.focus ? <XaiPanel event={cs.focus.event} alert={finalNow ? finalAlert : undefined} signals={finalNow ? undefined : cs.revealed} pending={!finalNow} live /> : null}
+              </>
+            ) : <p className="py-6 text-center text-xs text-muted">Start the scenario to see the evidence and its explanation.</p>}
           </Card>
 
           {id === 'D' && metrics.length > 0 && (
@@ -207,7 +220,7 @@ export default function AttackSimulator() {
           )}
 
           {(done || (live && emittedIds.size > 0)) && finalEvent && (
-            <Card title="Investigation — causal chain" code="CAUSAL_CHAIN" icon={Network} right={id === 'E' ? <Link to="/graph"><Button size="xs" variant="neon" icon={Network}>Open delegation graph</Button></Link> : undefined}>
+            <Card title="Investigation — causal chain" code="CAUSAL_CHAIN" icon={Network} right={id === 'E' ? <Link to="/dashboard/graph"><Button size="xs" variant="neon" icon={Network}>Open delegation graph</Button></Link> : undefined}>
               <CausalChain leafId={finalEvent.event_id} />
               {!emittedIds.has(finalEvent.event_id) && <p className="mt-2 text-xs text-muted">The chain completes when the final operation reaches enforcement.</p>}
             </Card>

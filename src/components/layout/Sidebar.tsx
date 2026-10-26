@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { PanelLeftClose, PanelLeftOpen, ShieldCheck, X } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { useSim } from '../../store/useSim';
 import { useStore } from '../../store/useStore';
@@ -63,7 +63,7 @@ function Items({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () 
               {isActive && <motion.span layoutId="navActive" className="absolute left-0 top-1.5 h-[calc(100%-12px)] w-[3px] rounded-full bg-neon shadow-[0_0_10px_rgb(var(--neon))]" />}
               <n.icon size={17} className={cn('shrink-0', isActive && 'text-neon')} aria-hidden />
               {!collapsed && <span className="truncate">{n.label}</span>}
-              {n.to === '/alerts' && open > 0 && (
+              {n.to === '/dashboard/alerts' && open > 0 && (
                 <span className={cn('ml-auto rounded-full bg-brand/90 px-1.5 font-mono text-[10px] font-semibold text-white', collapsed && 'absolute right-1 top-0.5 ml-0 px-1 text-[9px]')}>{open}</span>
               )}
             </>
@@ -79,7 +79,7 @@ export function Sidebar() {
   const toggle = useUi((s) => s.toggleSidebar);
   return (
     <aside className={cn('glass fixed inset-y-3 left-3 z-40 hidden flex-col !rounded-2xl p-3 transition-[width] duration-300 lg:flex', collapsed ? 'w-[68px]' : 'w-[240px]')}>
-      <div className={cn('mb-4 mt-1 px-1', collapsed && 'flex justify-center px-0')}><Logo collapsed={collapsed} /></div>
+      <Link to="/" aria-label="DriftShield website" className={cn('mb-4 mt-1 block px-1', collapsed && 'flex justify-center px-0')}><Logo collapsed={collapsed} /></Link>
       <div className="min-h-0 flex-1 overflow-y-auto"><Items collapsed={collapsed} /></div>
       <div className="mt-3 space-y-2">
         <RunIndicator collapsed={collapsed} />

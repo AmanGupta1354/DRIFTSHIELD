@@ -6,6 +6,7 @@ import type { EnforcementAction, Lane, Signal, Triad } from '../../types';
 import { FAMILY_LABEL } from '../../data/policies';
 import { useStore } from '../../store/useStore';
 import { Badge, LaneChip } from '../ui/Badges';
+import { Tip } from '../ui/Controls';
 
 const LANES: { key: Lane; label: string; q: string; icon: typeof Brain }[] = [
   { key: 'role', label: 'ROLE', q: 'Is the action permitted for the declared role?', icon: ShieldCheck },
@@ -13,7 +14,7 @@ const LANES: { key: Lane; label: string; q: string; icon: typeof Brain }[] = [
   { key: 'routine', label: 'ROUTINE', q: 'Is it consistent with the agent\'s normal behaviour?', icon: Activity },
 ];
 
-export function TriadPanel({ triad, action }: { triad: Triad; action?: EnforcementAction; compact?: boolean }) {
+export function TriadPanel({ triad, action, compact }: { triad: Triad; action?: EnforcementAction; compact?: boolean }) {
   const showHints = useStore((s) => s.prefs.display.showLaneHints);
   return (
     <div>
@@ -30,11 +31,11 @@ export function TriadPanel({ triad, action }: { triad: Triad; action?: Enforceme
             >
               <div className="flex items-center justify-between gap-2">
                 <div className={cn('flex items-center gap-2 font-mono text-xs font-semibold tracking-[0.18em]', t.text)}>
-                  <l.icon size={14} aria-hidden /> {l.label}
+                  <l.icon size={14} aria-hidden /> <Tip text={l.q}><span className="cursor-help">{l.label}</span></Tip>
                 </div>
                 <LaneChip status={lane.status} />
               </div>
-              {showHints && <p className="mt-1.5 text-[11px] text-muted">{l.q}</p>}
+              {showHints && !compact && <p className="mt-1.5 text-[11px] text-muted">{l.q}</p>}
               <p className="mt-2 text-[12.5px] leading-snug text-fg/90">{lane.summary}</p>
             </motion.div>
           );
