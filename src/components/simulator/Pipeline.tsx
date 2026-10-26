@@ -68,9 +68,6 @@ export function Pipeline({ states, outcomeLabel, compact }: { states: StageState
                 </div>
               </div>
             </div>
-            {i < STAGES.length - 1 && (
-              <div className="relative ml-[21px] hidden h-px flex-1 md:hidden" />
-            )}
           </li>
         );
       })}

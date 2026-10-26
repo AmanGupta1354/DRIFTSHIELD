@@ -47,7 +47,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
       <Card title="Appearance & motion" code="DISPLAY" icon={Monitor}>
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-3"><div><div className="text-[13px] font-medium">Theme</div><div className="text-xs text-muted">Dark glass is the default.</div></div>
@@ -84,7 +84,7 @@ export default function Settings() {
       </Card>
 
       <Card className="lg:col-span-2" title="Risk thresholds" code="POLICY_BANDS" icon={Gauge} right={<Button size="xs" variant="ghost" onClick={() => setPrefs({ thresholds: DEFAULT_THRESHOLDS })}>Restore defaults</Button>}>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           <div className="space-y-4">
             {SLIDERS.map((s) => (
               <label key={s.key} className="block">

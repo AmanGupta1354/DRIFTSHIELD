@@ -23,7 +23,7 @@ export const DEFAULT_PREFS: Prefs = {
 export type AgentAction = 'activate' | 'pause' | 'quarantine' | 'isolate' | 'restore';
 const STATE_RANK: Record<AgentState, number> = { active: 0, watched: 1, paused: 2, quarantined: 3, isolated: 4 };
 
-interface RunPrior { agentId: string; state: AgentState; risk: number; lastSuspicious?: string }
+interface RunPrior { agentId: string; state: AgentState; risk: number; lastSuspicious?: string; lastSeen: number }
 
 interface Data {
   agents: Agent[];
@@ -78,17 +78,28 @@ export const useStore = create<AppState>()(
       resetData: () => set(freshData(get().prefs.thresholds)),
 
       commitEvent: (e) =>
-        set((s) => ({
-          events: [...s.events, e],
-          agents: s.agents.map((a) =>
-            a.id !== e.agent_id
-              ? a
-              : {
-                  ...a, lastSeen: e.ts, risk: agentRiskAfter(a.risk, e.decision.score),
-                  lastSuspicious: e.decision.score >= 35 ? `${e.tool} on ${e.resource} (score ${e.decision.score})` : a.lastSuspicious,
-                },
-          ),
-        })),
+        set((s) => {
+          // remember the agent as it was before this run first touched it, so a reset/replay restores it exactly
+          const key = e.run_key;
+          const before = s.agents.find((a) => a.id === e.agent_id);
+          const priors = key ? s.runPrior[key] ?? [] : [];
+          const runPrior =
+            key && before && !priors.some((p) => p.agentId === before.id)
+              ? { ...s.runPrior, [key]: [...priors, { agentId: before.id, state: before.state, risk: before.risk, lastSuspicious: before.lastSuspicious, lastSeen: before.lastSeen }] }
+              : s.runPrior;
+          return {
+            runPrior,
+            events: [...s.events, e],
+            agents: s.agents.map((a) =>
+              a.id !== e.agent_id
+                ? a
+                : {
+                    ...a, lastSeen: e.ts, risk: agentRiskAfter(a.risk, e.decision.score),
+                    lastSuspicious: e.decision.score >= 35 ? `${e.tool} on ${e.resource} (score ${e.decision.score})` : a.lastSuspicious,
+                  },
+            ),
+          };
+        }),
 
       clearRun: (runKey) =>
         set((s) => {
@@ -104,7 +115,7 @@ export const useStore = create<AppState>()(
               const touched = a.containment.some((c) => c.run_key === runKey);
               if (!p && !touched) return a;
               return {
-                ...a, state: p ? p.state : a.state, risk: p ? p.risk : a.risk, lastSuspicious: p ? p.lastSuspicious : a.lastSuspicious,
+                ...a, state: p ? p.state : a.state, risk: p ? p.risk : a.risk, lastSuspicious: p ? p.lastSuspicious : a.lastSuspicious, lastSeen: p ? p.lastSeen : a.lastSeen,
                 containment: a.containment.filter((c) => c.run_key !== runKey),
               };
             }),
@@ -119,7 +130,7 @@ export const useStore = create<AppState>()(
           const priors = s.runPrior[runKey] ?? [];
           const nextPriors = priors.some((p) => p.agentId === agentId)
             ? priors
-            : [...priors, { agentId, state: a.state, risk: a.risk, lastSuspicious: a.lastSuspicious }];
+            : [...priors, { agentId, state: a.state, risk: a.risk, lastSuspicious: a.lastSuspicious, lastSeen: a.lastSeen }];
           if (STATE_RANK[to] <= STATE_RANK[a.state]) return { runPrior: { ...s.runPrior, [runKey]: nextPriors } };
           return {
             runPrior: { ...s.runPrior, [runKey]: nextPriors },

@@ -3,6 +3,7 @@ import { useSim } from '../store/useSim';
 import { useStore } from '../store/useStore';
 import { useUi } from '../store/useUi';
 import type { AgentState } from '../types';
+import { isBlocking } from './riskScoring';
 import { alertFromEvent, compileScenario, stateFor, type CompiledStep } from './simulationEngine';
 
 /**
@@ -82,17 +83,24 @@ async function playFrom(id: ScenarioId, startAt: number, myToken: number) {
     if (myToken !== token) return;
     const cs = compiled.steps[i];
     useSim.setState({ stepIndex: i, stage: 0, decided: false, status: sim().status === 'paused' ? 'paused' : 'running' });
+    if (!cs.spec.log.length && cs.focus) {
+      const e = cs.focus.event;
+      pushLog(`[gateway] intercept ${e.agent_id} → ${e.tool}(${e.resource})`, cs.spec.tone);
+    }
     cs.spec.log.slice(0, 1).forEach((l) => pushLog(l, cs.spec.tone));
     const focus = Math.max(0, cs.spec.stage);
     for (let s = 0; s <= focus; s++) {
       useSim.setState({ stage: s });
-      if (!(await sleep(STAGE_MS + ((cs.spec.tone === 'block' || cs.liveScore >= 55) && s >= 2 && s <= 4 ? 420 : 0), myToken))) return;
+      if (!(await sleep((cs.spec.tone === 'safe' && cs.liveScore < 35 ? STAGE_MS * 0.55 : STAGE_MS) + ((cs.spec.tone === 'block' || cs.liveScore >= 55) && s >= 2 && s <= 4 ? 420 : 0), myToken))) return;
       const line = cs.spec.log[s + 1];
       if (line && s < focus) pushLog(line, cs.spec.tone);
     }
     cs.spec.log.slice(Math.max(1, focus + 1)).forEach((l) => pushLog(l, cs.spec.tone));
-    if (cs.focus && cs.liveScore > 0) {
+    if (cs.focus && (cs.liveScore > 0 || !cs.spec.log.length)) {
       pushLog(`[score] ${cs.liveScore}/100 → ${cs.liveAction.toUpperCase()}`, cs.spec.tone);
+    }
+    if (!cs.spec.log.length && cs.focus) {
+      pushLog(isBlocking(cs.liveAction) ? '[policy] request dropped — not forwarded to the tool' : '[policy] forwarded to the tool', cs.spec.tone);
     }
     applySideEffects(id, cs, alertCounter);
     useSim.setState({ decided: true });

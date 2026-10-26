@@ -262,7 +262,7 @@ const E: ScenarioSpec = {
 // ------------------------------------------------------------------ M · live monitor playlist
 
 const mStep = (key: string, title: string, detail: string, stage: number, tone: StepSpec['tone'], extra: Partial<StepSpec> = {}): StepSpec => ({
-  title, detail, stage, tone, emit: [key], focus: key, reveal: 'all', log: [], ...extra,
+  title, detail, stage: Math.max(stage, 6), tone, emit: [key], focus: key, reveal: 'all', log: [], ...extra,
 });
 
 const M: ScenarioSpec = {
